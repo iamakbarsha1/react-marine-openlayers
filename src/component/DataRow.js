@@ -21,7 +21,7 @@ const DataRow = ({ data, onMenuClick, activeIndex, setActiveIndex }) => {
           </div>
           <div className="relative p-1 col-span-1 flex items-center justify-center">
             <SettMoreO
-              className="w-5 h-5"
+              className="w-5 h-5 rotate-90"
               onClick={() => setActiveIndex(index)}
             />
 
