@@ -34,6 +34,7 @@ import Modal from "../component/Modal";
 
 const OpenLayerMap = () => {
   const [map, setMap] = useState(null);
+  // eslint-disable-next-line
   const [drawingState, setDrawingState] = useState({
     isDrawing: false,
     activeModal: null,
