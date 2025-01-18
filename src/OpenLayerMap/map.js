@@ -229,6 +229,22 @@ const OpenLayerMap = () => {
         )}
       </main>
 
+      <main className="absolute z-50 bottom-10 right-10">
+        <div className="mb-2 underline font-medium">Visit my:</div>
+        <div className="flex gap-5">
+          <a href="https://akbarsha.dev/" target="_blank" rel="noreferrer">
+            <div className="button">Portfolio</div>
+          </a>
+          <a
+            href="https://github.com/iamakbarsha1"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <div className="button">GitHub</div>
+          </a>
+        </div>
+      </main>
+
       <section
         id="map"
         className="z-10 w-full h-full"
