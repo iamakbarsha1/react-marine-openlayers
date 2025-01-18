@@ -28,9 +28,8 @@ import { Map, View } from "ol";
 import VectorLayer from "ol/layer/Vector";
 import { fromLonLat } from "ol/proj";
 import { Draw } from "ol/interaction";
-import { EsseCloseCircleO } from "lovedicons/dist/esseO";
-import { ArrExportO } from "lovedicons/dist/arrO";
-import DataRow from "../component/Modal";
+// import DataRow from "../component/Modal";
+import Modal from "../component/Modal";
 // import { set } from "ol/transform";
 
 const OpenLayerMap = () => {
@@ -45,7 +44,7 @@ const OpenLayerMap = () => {
   });
 
   const [activeModal, setActiveModal] = useState(null);
-  //   const [activeIndex, setActiveIndex] = useState(null);
+  const [activeIndex, setActiveIndex] = useState(null);
 
   const lineSOurce = useRef(new VectorSource());
   const polygonSoucre = useRef(new VectorSource());
@@ -64,23 +63,25 @@ const OpenLayerMap = () => {
     const dLat = toRad(lat2 - lat1);
     const dLon = toRad(lon2 - lon1);
     const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRad(lat1)) *
-        Math.cos(toRad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+    const distanceInMeters = R * c;
+    const distanceInMiles = distanceInMeters / 1609.34; // Convert to miles
+    return distanceInMiles; // Return miles
   }, []);
 
   const formatCoordinates = useCallback(
     (coordinates) => {
+      //   console.log("coordinates --- " + JSON.stringify(coordinates));
       return coordinates.map((coord, index) => ({
-        waypoint: `WP(${index.toString().padStart(2, "0")})`,
+        waypoint: `${index.toString().padStart(2, "0")}`,
         coordinates: coord.map((val) => parseFloat(val.toFixed(2))),
         distance:
           index > 0
-            ? calculateDistance(coord, coordinates[index - 1]).toFixed(2)
+            ? parseFloat(
+                calculateDistance(coord, coordinates[index - 1]).toFixed(2) // Format distance in miles
+              )
             : 0,
       }));
     },
@@ -101,10 +102,19 @@ const OpenLayerMap = () => {
         type === "LineString" ? rawCoordinates : rawCoordinates[0]
       );
 
+      //   setCoordinates((prev) => ({
+      //     ...prev,
+      //     // [type === "LineString" ? "lineString" : "polygon"]: formattedCoords,
+      //     lineString: formattedCoords,
+      //   }));
       setCoordinates((prev) => ({
         ...prev,
         [type === "LineString" ? "lineString" : "polygon"]: formattedCoords,
       }));
+      //   setPolygonContent((prev) => ({
+      //     ...prev,
+      //     polygon: formattedCoords,
+      //   }));
       setDrawingState({
         isDrawing: false,
         activeModal: type === "LineString" ? "mission" : "polygon",
@@ -117,10 +127,51 @@ const OpenLayerMap = () => {
     setDrawingState({ isDrawing: true, activeModal: null });
   };
 
+  //   const handleMenuClick = (key, coordIndex) => {
+  //     if (key === "insertBefore" || key === "insertAfter") {
+  //       startDrawing("Polygon");
+  //       setActiveIndex(null);
+  //     }
+  //   };
+
   const handleMenuClick = (key, coordIndex) => {
     if (key === "insertBefore" || key === "insertAfter") {
+      // Start drawing the polygon
       startDrawing("Polygon");
+
+      // Handle the event after the polygon is drawn
+      map.once("drawend", (event) => {
+        const polygonCoordinates = event.feature
+          .getGeometry()
+          .getCoordinates()[0]; // Get the polygon's vertices
+
+        const updatedLineString = [...coordinates.lineString];
+        if (key === "insertBefore") {
+          updatedLineString.unshift(...polygonCoordinates);
+        } else if (key === "insertAfter") {
+          updatedLineString.push(...polygonCoordinates);
+        }
+
+        // Update the LineString coordinates
+        const lineFeature = lineSOurce.current.getFeatures()[0];
+        if (lineFeature) {
+          lineFeature
+            .getGeometry()
+            .setCoordinates(
+              updatedLineString.map((coord) => coord.coordinates)
+            );
+        }
+
+        // Update the state
+        setCoordinates((prev) => ({
+          ...prev,
+          lineString: updatedLineString,
+        }));
+
+        setActiveIndex(null);
+      });
     }
+    setActiveIndex(null);
   };
 
   //   initialize map
@@ -152,16 +203,11 @@ const OpenLayerMap = () => {
     return () => intializeMap.setTarget(undefined);
   }, []);
 
-  console.log(
-    "coordinates?.lineString" + JSON.stringify(coordinates?.lineString)
-  );
-  console.log("coordinates?.polygon" + JSON.stringify(coordinates?.polygon));
-
   return (
     <main className="relative w-screen h-screen ">
       <main className="absolute z-50 pt-10">
-        <div>OpenLayerMap</div>
-        <section className="m-5 p-3 bg-violet-500 text-white font-bold rounded-md cursor-pointer">
+        <div className="font-bold underline">OpenLayers Map</div>
+        <section className="m-5 p-3 w-fit bg-violet-500 text-white font-bold rounded-md shadow-2xl shadow-purple-800 cursor-pointer hover:animate-shake">
           <div
             onClick={() => {
               startDrawing("LineString");
@@ -172,65 +218,13 @@ const OpenLayerMap = () => {
         </section>
 
         {activeModal && (
-          <main>
-            <main className="ml-5 bg-white rounded-md text-xs">
-              <section className="p-3 flex items-center justify-between shadow-md">
-                <div className="font-bold">Mission Creation</div>
-                <EsseCloseCircleO
-                  className="w-5 h-5"
-                  onClick={handleCloseDrawing}
-                />
-              </section>
-              <section className="py-3 px-3 flex flex-col items-start border-b border-gray-400">
-                <div className="mb-2 font-bold">Waypoint Navigation</div>
-                <div>
-                  {coordinates?.lineString.length > 0 ||
-                  coordinates?.polygon.length > 0 ? (
-                    <div className="grid grid-cols-7 font-bold border-b border-t">
-                      <div className="p-1 col-span-1 flex items-center justify-center">
-                        <input type="checkbox" />
-                      </div>
-                      <div className="p-1 col-span-1 flex items-center justify-center">
-                        WP
-                      </div>
-                      <div className="p-1 col-span-2 flex items-center justify-center">
-                        Coordinates
-                      </div>
-                      <div className="p-1 col-span-2 flex items-center justify-center">
-                        Distance(m)
-                      </div>
-                      <div className="p-1 col-span-1 flex items-center justify-center">
-                        <ArrExportO className="w-5 h-5" />
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {coordinates?.lineString.length > 0 ? (
-                    <DataRow
-                      data={coordinates?.lineString}
-                      onMenuClick={handleMenuClick}
-                    />
-                  ) : null}
-                  {coordinates?.polygon.length > 0 ? (
-                    <DataRow
-                      data={coordinates?.polygon}
-                      onMenuClick={handleMenuClick}
-                    />
-                  ) : null}
-                </div>
-
-                <div className="p-3 bg-gray-200 border border-black border-dashed rounded-md">
-                  Click on the map to mark the points of the route and press
-                  enter/right click, complete the route
-                </div>
-              </section>
-              <section className="p-2 flex justify-end">
-                <div className="p-2 w-fit bg-violet-500 text-white font-bold rounded-md cursor-pointer">
-                  Generate Data
-                </div>
-              </section>
-            </main>
-          </main>
+          <Modal
+            coordinates={coordinates}
+            handleCloseDrawing={handleCloseDrawing}
+            handleMenuClick={handleMenuClick}
+            activeIndex={activeIndex}
+            setActiveIndex={setActiveIndex}
+          />
         )}
       </main>
 

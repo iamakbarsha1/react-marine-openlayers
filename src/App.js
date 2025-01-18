@@ -1,11 +1,10 @@
-import logo from "./logo.svg";
+// import logo from "./logo.svg";
 import "./App.css";
-import OpenLayerMap, { renderMap } from "./OpenLayerMap/map";
+import OpenLayerMap from "./OpenLayerMap/map";
 
 function App() {
   return (
     <div className="App">
-      {/* <div> {renderMap}</div> */}
       <OpenLayerMap />
       {/* <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
