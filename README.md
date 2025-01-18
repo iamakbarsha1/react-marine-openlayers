@@ -1,3 +1,11 @@
+# Screenshots!!
+
+<img src="./screenshots/image_1.png" alt="Screenshot 1" />
+<img src="./screenshots/image_2.png" alt="Screenshot 2" />
+<img src="./screenshots/image_3.png" alt="Screenshot 3" />
+
+![Screenshot 1](./screenshots/image_1.png)
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -6,7 +14,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 In the project directory, you can run:
 
-### `npm start`
+### `npm run start` // css by tailwind
 
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
