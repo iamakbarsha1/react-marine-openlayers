@@ -4,7 +4,7 @@
 <img src="./screenshots/image_2.png" alt="Screenshot 2" />
 <img src="./screenshots/image_3.png" alt="Screenshot 3" />
 
-![Screenshot 1](./screenshots/image_1.png)
+<!-- ![Screenshot 1](./screenshots/image_1.png) -->
 
 # Getting Started with Create React App
 
